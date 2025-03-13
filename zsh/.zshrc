@@ -1,5 +1,7 @@
 # ~/.zshrc
 
+export EDITOR="nvim"
+
 export ZPLUG_DIR=$HOME/.zplug
 
 [[ ! -d $ZPLUG_DIR ]] && { git clone https://github.com/zplug/zplug.git $ZPLUG_DIR; }
@@ -59,3 +61,4 @@ eval "$(direnv hook zsh)"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
+
