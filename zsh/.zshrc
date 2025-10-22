@@ -1,64 +1,124 @@
-# ~/.zshrc
+#!/usr/bin/env zsh
 
-export EDITOR="nvim"
+load_order=( load_includes load_zplug )
 
-export ZPLUG_DIR=$HOME/.zplug
+function notice() {                                           
+  GET_INPUT=$1                                         
+                                                              
+  printf "-${fg_bold[cyan]}!${fg[default]}- ${GET_INPUT}\n\n" 
+                                                              
+}                                                             
 
-[[ ! -d $ZPLUG_DIR ]] && { git clone https://github.com/zplug/zplug.git $ZPLUG_DIR; }
-source $ZPLUG_DIR/init.zsh
+function subnotice() {
+  GET_INPUT=$1                                                 
+                                                               
+  printf " ${fg_bold[white]}҉҉҉҉҈҉·${fg[default]}  ${GET_INPUT}\n\n"  
+                                                               
+}
 
-# Plugins
-zplug "zsh-users/zsh-completions"
-zplug "zsh-users/zsh-autosuggestions"
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-zplug "zsh-users/zsh-history-substring-search", defer:3
-zplug "plugins/direnv", from:oh-my-zsh
-zplug "plugins/docker", from:oh-my-zsh
-zplug "plugins/docker-compose", from:oh-my-zsh
-zplug "plugins/git", from:oh-my-zsh
-zplug "plugins/github", from:oh-my-zsh
-zplug "plugins/node", from:oh-my-zsh
-zplug "plugins/nodenv", from:oh-my-zsh
-zplug "plugins/npm", from:oh-my-zsh
-zplug "plugins/nvm", from:oh-my-zsh
-zplug "plugins/pyenv", from:oh-my-zsh
-zplug "plugins/python", from:oh-my-zsh
-zplug "plugins/kitty", from:oh-my-zsh
-zplug "plugins/tmux", from:oh-my-zsh
-zplug "themes/gentoo", from:oh-my-zsh, as:theme
+function load_zplug {
+  notice "Loading Plugin Manager (${fg_bold[green]}zplug${fg[default]})"
+    export ZPLUG_DIR="$HOME/.zplug"
+    export ZPLUG_INIT="$ZPLUG_DIR/init.zsh"
+    export ZPLUG_REPO="https://github.com/zplug/zplug.git"
 
-if $( ! zplug check --verbose; ); then
-    echo -e "Install plugin updates? [y/N]: "
-    read -q && { echo; zplug install; } || { echo -e "Skipped."; }
-fi
+    function zplug_check {
+        subnotice "checking for existing installations."
+        if [ ! -d "$ZPLUG_DIR" ]; then
+          printf '[!] %s\n' "Unable to locate zplug install folder. Installing..."
+          git clone $ZPLUG_REPO $ZPLUG_DIR
+        fi
+    }
 
-zplug load
+    function zplug_init { 
+        subnotice "preparing zplug environment"
+        source $ZPLUG_INIT
+    }
 
-# XDG 
-if test -z "${XDG_RUNTIME_DIR}"; then
-  export XDG_RUNTIME_DIR=/tmp/"${UID}"-runtime-dir
-    if ! test -d "${XDG_RUNTIME_DIR}"; then
-        mkdir "${XDG_RUNTIME_DIR}"
-        chmod 0700 "${XDG_RUNTIME_DIR}"
-    fi
-fi
+    function zplug_plugins {
+        subnotice "loading user selected plugins"
+        
+        # user selected plugins
+        zplug "zsh-users/zsh-completions"
+        zplug "zsh-users/zsh-autosuggestions"
+        zplug "zsh-users/zsh-syntax-highlighting", defer:2
+        zplug "zsh-users/zsh-history-substring-search", defer:3
+        zplug 'plugins/autoenv', from:oh-my-zsh
+        zplug 'plugins/brew', from:oh-my-zsh
+        zplug "plugins/direnv", from:oh-my-zsh
+        zplug "plugins/docker", from:oh-my-zsh
+        zplug "plugins/docker-compose", from:oh-my-zsh
+        zplug "plugins/git", from:oh-my-zsh
+        zplug "plugins/github", from:oh-my-zsh
+        zplug "plugins/node", from:oh-my-zsh
+        zplug "plugins/nodenv", from:oh-my-zsh
+        zplug "plugins/npm", from:oh-my-zsh
+        zplug "plugins/nvm", from:oh-my-zsh
+        zplug "plugins/pyenv", from:oh-my-zsh
+        zplug "plugins/python", from:oh-my-zsh
+        zplug "plugins/kitty", from:oh-my-zsh
+        zplug "plugins/tmux", from:oh-my-zsh
+        zplug 'themes/bureau', as:theme, from:oh-my-zsh
+    }
 
-# NVM 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    function zplug_update {
+        subnotice "checking for updates"
+        if ! zplug check --verbose; then
+            printf '%s\n' "Install latest plugins? [y/N]: "
+            read -q && { echo; zplug install; } || \
+                { echo -e "  - skipped by user"; }
+        fi
+    }
 
-# pyenv
-  echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
-  echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
-  echo 'eval "$(pyenv init - zsh)"' >> ~/.zshrc
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
+    function zplug_load {
+      zplug load && { notice "Plugin Manager (${fg_bold[cyan]}zplug${fg[default]}): Loaded Successfully"; } || \
+          { notice "failed to load zplug"; }
+    }
 
-# direnv
-eval "$(direnv hook zsh)"
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
+    zplug_check;
+    zplug_init;
+    zplug_plugins;
+    zplug_update;
+    zplug_load;
+}
 
+function load_includes() {
+  printf "-${fg_bold[cyan]}!${fg[default]}- Loading include objects from $HOME/.zsh_include\n\n"
+  for include in $HOME/.zsh_include/*
+  do 
+    source $include &&
+      { printf "  [${fg_bold[green]}$(basename $include)${fg[default]}] imported successfully\n\n"; } || \
+        { printf "  [${fg_bold[red]}$(basename $include){fg[default]}] import failure\n\n"; }
+  done
+  printf " ${fg_bold[cyan]}>${fg[default]} Complete\n\n"
+}
+
+function compose-getenv() {
+  local CTNR_ID=$1
+  local INPUT=$2
+
+  function usage() { 
+    printf "Container name required to output environment!\n\n"
+    printf "Usage: compose-getenv CONTAINER_NAME VARIABLE\n\n
+        CONTAINER_NAME		Name of the container to show variables\n
+	VARIABLE		Optional. Check specific variable.\n"
+  }
+
+  if [ -z "${CTNR_ID}" ]; then
+    usage; exit 1; 
+  fi
+
+  if [ -z $INPUT ]; then
+    printf "Environment for ${CTNR_ID}\n\n"
+    docker compose exec $CTNR_ID env
+  
+  fi
+
+  docker compose exec ${CTNR_ID} env | grep ${INPUT}
+  
+}
+
+for function in ${load_order[@]};
+do 
+  eval $function 
+done
